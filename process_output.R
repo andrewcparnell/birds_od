@@ -1,4 +1,4 @@
-# Create some plots based on the output of the JOINT model runs
+# Create some plots based on the output of the joint model runs
 
 # GOAL: try and answer the key question - do dairy farms have more flocking (i.e. more dispersion) in winter?
 
@@ -6,7 +6,7 @@
 rm(list=ls())
 
 # Set the working directory
-setwd("~/transfer/McMahon_20140829/new_models_20151001")
+setwd("~/github/birds_od")
 
 # Load in relevant packages
 library(reshape2)
@@ -14,14 +14,64 @@ library(ggplot2)
 library(car)
 
 # Load in the data
-load(file='data_all.rda')
+load(file='birds.rda')
 
-# Load in the output
-all_pars = vector('list',3)
-for(i in 1:3) {
-  all_pars[[i]] = read.csv(paste(colnames(data_all)[i],'_joint_pars.csv',sep=''))
-  names(all_pars)[i] = paste(colnames(data_all)[i])    
+# Plot requirements
+plot_dims = c(12,8) # This is the width and heigth at which to save all plots
+
+##########################
+
+# Load in the parameters output
+all_pars = vector('list',2)
+for(i in 1:2) {
+  all_pars[[i]] = read.csv(paste(colnames(birds)[i],'_joint_pars.csv',sep=''))
+  names(all_pars)[i] = paste(colnames(birds)[i])    
 }
+
+##########################
+
+# Perform some posterior predictive checking by simulating from the posterior distribution of the likelihood
+y_pred = vector('list',2)
+for(i in 1:2) {
+  mu_cols = grep('mu\\.',colnames(all_pars[[i]]))
+  mu_pars = all_pars[[i]][,mu_cols]
+  mu_phi_cols = grep('mu_phi\\.',colnames(all_pars[[i]]))
+  mu_phi_pars = all_pars[[i]][,mu_phi_cols]
+  
+  # Now simulate from the negative binomial distribution
+  y_pred[[i]] = matrix(NA,ncol=ncol(mu_pars),nrow=nrow(mu_pars))
+  for(j in 1:nrow(y_pred[[i]])) {
+    for(k in 1:ncol(y_pred[[i]])) y_pred[[i]][j,k] = rnbinom(1,mu=exp(mu_pars[j,k]),size=mu_phi_pars[j,k])
+  }
+  
+  # Now plot column-wise means vs y values
+  y_pred_range = t(apply(y_pred[[i]],2,'quantile',c(0.05,0.5,0.95)))
+  df = data.frame(birds[,i],y_pred_range)
+  colnames(df) = c('Response','5%','50%','95%')
+  limits <- aes(ymax = df[,4], ymin= df[,2])
+  
+  p = ggplot(df,aes(x=Response,y=df[,3],colour=Response)) + 
+    geom_point() + 
+    geom_errorbar(limits, width=0.1) + 
+    theme_bw() + 
+    theme(axis.title.y = element_text(angle = 0, vjust = 1, hjust=0)) + 
+    theme(legend.position='None') + 
+    ylab('Predicted\ncount') + 
+    xlab('True count') + 
+    geom_abline(intercept = 0, slope = 1, colour='Red') + 
+    ggtitle(paste0('Posterior predictive comparison for ',colnames(birds)[i],'\n'))
+                
+  print(p)
+  ggsave(p,file=paste0(colnames(birds)[i],'_posterior_predictive.pdf'),width=plot_dims[1],height=plot_dims[2])
+  
+  # Correlation between true and predictive
+  print(cor(df[,1],df[,3]))
+         
+  # Proportion inside 90% region:
+  print(sum(df[,1]-df[,2]<0,df[,1]-df[,4]<0)/nrow(df))
+  
+}
+
 
 ##########################
 
@@ -30,9 +80,9 @@ for(i in 1:3) {
 
 # So plot beta_day, beta_winter and beta_day_winter on same plot
 mean_pars = vector('list',9)
-names(mean_pars) = outer(c('Abundance','Farmland indicator','Invertebrates'),c(' - dairy',' - winter',' - dairy*winter'),FUN=paste0)
+names(mean_pars) = outer(c('Abundance','Farmland indicator'),c(' - dairy',' - winter',' - dairy*winter'),FUN=paste0)
 count = 1
-for(i in 1:3) {
+for(i in 1:2) {
   mean_pars[[count]] = all_pars[[i]]$beta_dairy
   mean_pars[[count+1]] = all_pars[[i]]$beta_winter
   mean_pars[[count+2]] = all_pars[[i]]$beta_dairy_winter

@@ -17,8 +17,6 @@ setwd("~/github/birds_od")
 # Load in relevant packages
 library(rstan)
 library(parallel)
-#library(reshape2)
-#library(ggplot2)
 
 ## Load in data
 load(file='birds.rda')
@@ -88,7 +86,6 @@ model {
 
   // Likelihood
   y ~ neg_binomial_2_log(mu, mu_phi);
-
 }
 '
 
@@ -98,21 +95,43 @@ model {
 for(i in 1:2) { # Loop through response variables
     # Set up  
     curr_data = birds
-    stan_data = list(N=nrow(curr_data),N_region=length(unique(curr_data$region)),N_square=length(unique(curr_data$square2)),y=curr_data[,i],log_dur=log(curr_data$duration),day=curr_data$day,dairy=as.integer(curr_data$system=='Dairy'),region=as.integer(curr_data$region),reg_square=as.integer(curr_data$square2),winter=as.integer(curr_data$season=='winter'))
-    stan_pars = c('alpha','beta_day','beta_dairy','beta_winter','beta_day_winter','beta_dairy_winter','phi_alpha','phi_dairy','phi_winter','phi_dairy_winter','sigma_region','sigma_square','b_region','b_square')
+    stan_data = list(N=nrow(curr_data),
+                     N_region=length(unique(curr_data$region)),
+                     N_square=length(unique(curr_data$square2)),
+                     y=curr_data[,i],
+                     log_dur=log(curr_data$duration),
+                     day=curr_data$day,
+                     dairy=as.integer(curr_data$system=='Dairy'),
+                     region=as.integer(curr_data$region),
+                     reg_square=as.integer(curr_data$square2),
+                     winter=as.integer(curr_data$season=='winter'))
+    stan_pars = c('alpha',
+                  'beta_day',
+                  'beta_dairy',
+                  'beta_winter',
+                  'beta_day_winter',
+                  'beta_dairy_winter',
+                  'phi_alpha',
+                  'phi_dairy',
+                  'phi_winter',
+                  'phi_dairy_winter',
+                  'sigma_region',
+                  'sigma_square',
+                  'b_region',
+                  'b_square',
+                  'mu',
+                  'mu_phi') # These last two used for posterior predictive checking
     
     # Test fit
-    stop()
-    # Only need to set up the model the first time
-    if(i==1) fit1 = stan(model_code = negbin_r_code, data = stan_data, chains = 4, iter = 10)
+    fit1 = stan(model_code = negbin_r_code, data = stan_data, chains = 4, iter = 10)
     # Proper fit
     fit2 = stan(fit = fit1, data = stan_data, iter=10000, thin=10, chains = 4, pars=stan_pars)
     #plot(fit2,pars=stan_pars[1:12])
     #print(fit2)
     
     # Capture output
-    capture.output(print(fit2),file=paste(colnames(birds)[i],'_joint_convergence.txt',sep=''))
-    write.csv(extract(fit2,pars=stan_pars),file=paste(colnames(birds)[i],'_joint_pars.csv',sep=''))
+    capture.output(print(fit2),file=paste(colnames(birds)[i],'_convergence.txt',sep=''))
+    write.csv(extract(fit2,pars=stan_pars),file=paste(colnames(birds)[i],'_pars.csv',sep=''))
     
 }
 
