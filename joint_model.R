@@ -12,7 +12,7 @@
 rm(list=ls())
 
 # Set the working directory
-setwd("~/github/birds_od")
+#setwd("~/github/birds_od")
 
 # Load in relevant packages
 library(rstan)
@@ -33,7 +33,6 @@ data {
   int<lower=1> N_region; // Number of regions
   int<lower=1> N_square; // Number of squares per region - luckily this is balanced
   int y[N]; // Counts for response variable
-  vector[N] log_dur; // Log duration - offset
   vector[N] dairy; // dairy (1) or not (0) - main fixed effect in both mean and overdispersion
   int region[N]; // region - random effect
   int reg_square[N]; // square - random effect within region
@@ -91,13 +90,12 @@ model {
 # Loop through and run on each response variable
 
 for(i in 1:2) { # Loop through response variables
-    # Set up  
+    # Set up
     curr_data = birds
     stan_data = list(N=nrow(curr_data),
                      N_region=length(unique(curr_data$Region)),
                      N_square=length(unique(curr_data$square2)),
                      y=curr_data[,i],
-                     log_dur=log(curr_data$Duration),
                      dairy=as.integer(curr_data$System=='Dairy'),
                      region=as.integer(curr_data$Region),
                      reg_square=as.integer(curr_data$square2),
@@ -116,17 +114,18 @@ for(i in 1:2) { # Loop through response variables
                   'b_square',
                   'mu',
                   'phi') # These last two used for posterior predictive checking
-    
+
     # Test fit
-    if(i==1) fit1 = stan(model_code = negbin_r_code, data = stan_data, chains = 4, iter = 10)# init = stan_init, 
+    if(i==1) fit1 = stan(model_code = negbin_r_code, data = stan_data, chains = 4, iter = 10)# init = stan_init,
     # Proper fit
+    stop()
     fit2 = stan(fit = fit1, data = stan_data, iter=10000, thin=10, chains = 4, pars=stan_pars)
     #plot(fit2,pars=stan_pars[1:12])
     #print(fit2)
-    
+
     # Capture output
     capture.output(print(fit2),file=paste(colnames(birds)[i],'_convergence.txt',sep=''))
     write.csv(extract(fit2,pars=stan_pars),file=paste(colnames(birds)[i],'_pars.csv',sep=''))
-    
+
 }
 
