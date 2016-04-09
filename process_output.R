@@ -26,7 +26,7 @@ plot_dims = c(8,4) # This is the width and heigth at which to save all plots
 
 # First just create a plot of the two response variables to show the over-dispersion
 b_m = melt(birds[,c('Abundance','Farmland_i','System','Season')])
-b_m$variable = revalue(b_m$variable, c("Farmland_i"="Farmland indicator"))
+b_m$variable = revalue(b_m$variable, c("Farmland_i"='Farmland indicator\nspecies abundance','Abundance'="Total bird\nabundance"))
 
 # First plot is over system
 f1 = ggplot(b_m,aes(x=System,y=value,fill=System)) +
@@ -141,6 +141,7 @@ for(i in 1:2) {
 # So plot beta_day, beta_winter and beta_day_winter on same plot
 mean_pars = vector('list',6)
 names(mean_pars) = outer(c('Abundance','Farmland indicator'),c(' - dairy',' - winter',' - dairy*winter'),FUN=paste0)
+
 count = 1
 for(i in 1:2) {
   mean_pars[[count]] = exp(all_pars[[i]]$beta_dairy)
@@ -159,6 +160,8 @@ df$response = unlist(lapply(strsplit(df$L1,' - '),'[',1))
 df$response2 = unlist(lapply(strsplit(df$L1,' - '),'[',2))
 names(df) = c('value','fullname','response','response2')
 df$response2 = factor(df$response2,levels=c('dairy*winter','dairy','winter'))
+df$response = revalue(df$response, c("Farmland indicator"='Farmland indicator\nspecies abundance','Abundance'="Total bird\nabundance"))
+
 
 # Plot
 p2 = ggplot(df,aes(x=response2,y=value,fill=response)) +
@@ -200,6 +203,7 @@ df$response = unlist(lapply(strsplit(df$L1,' - '),'[',1))
 df$response2 = unlist(lapply(strsplit(df$L1,' - '),'[',2))
 names(df) = c('value','fullname','response','response2')
 df$response2 = factor(df$response2,levels=c('dairy*winter','dairy','winter'))
+df$response = revalue(df$response, c("Farmland indicator"='Farmland indicator\nspecies abundance','Abundance'="Total bird\nabundance"))
 
 # Plot
 p3 = ggplot(df,aes(x=response2,y=value,fill=response)) +
@@ -207,13 +211,13 @@ p3 = ggplot(df,aes(x=response2,y=value,fill=response)) +
   theme_bw()+xlab('') +
   ylab('Effect size') +
   theme(legend.position='None') +
-  ggtitle('Over-dispersion effect of dairy and winter on response variables\n(higher values mean more over-dispersion)') +
+  ggtitle('Effect of farm system and survey season on over-dispersion in bird counts\n(effect values indicate the extent of over-dispersion in counts data)') +
   facet_grid(response ~ ., scales = "free_x") +
   theme(axis.title.y = element_text(angle = 0, hjust = 0,vjust=1)) +
   #scale_y_continuous(breaks=seq(0,75,by=10)) +
   #ylim(0,100) +
   coord_flip() +
-  scale_y_sqrt(limits=c(0,80),breaks=seq(0,80,by=10))
+  scale_y_sqrt(limits=c(0,80),breaks=c(1,2,5,seq(10,80,by=10)))
   #geom_hline(aes(yintercept=0))
 print(p3)
 ggsave(p3,file='od_effect.pdf',width=plot_dims[1],height=plot_dims[2])
