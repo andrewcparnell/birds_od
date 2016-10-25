@@ -164,8 +164,12 @@ df$response = revalue(df$response, c("Farmland indicator"='Farmland indicator\ns
 
 
 # Plot
+df$response = factor(df$response, 
+                    levels = c("Total bird\nabundance", 
+                               "Farmland indicator\nspecies abundance"))
 p2 = ggplot(df,aes(x=response2,y=value,fill=response)) +
   geom_boxplot(outlier.shape = NA) +
+  scale_fill_brewer(palette="Dark2") +
   theme_bw() +
   xlab('') +
   ylab('Effect size') +
@@ -206,9 +210,14 @@ df$response2 = factor(df$response2,levels=c('dairy*winter','dairy','winter'))
 df$response = revalue(df$response, c("Farmland indicator"='Farmland indicator\nspecies abundance','Abundance'="Total bird\nabundance"))
 
 # Plot
+df$response = factor(df$response, 
+                     levels = c("Total bird\nabundance", 
+                                "Farmland indicator\nspecies abundance"))
 p3 = ggplot(df,aes(x=response2,y=value,fill=response)) +
   geom_boxplot(outlier.shape = NA) +
-  theme_bw()+xlab('') +
+  scale_fill_brewer(palette="Dark2") +
+  theme_bw()+ 
+  xlab('') +
   ylab('Effect size') +
   theme(legend.position='None') +
   ggtitle('Effect of farm system and survey season on over-dispersion in bird counts\n(effect values indicate the extent of over-dispersion in counts data)') +
