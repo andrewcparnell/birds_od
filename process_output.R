@@ -40,6 +40,7 @@ f1 = ggplot(b_m,aes(x=System,y=value,fill=System)) +
   coord_flip()
 print(f1)
 ggsave(f1,file=paste0('count_system_boxplot.pdf'),width=plot_dims[1],height=plot_dims[2])
+ggsave(f1,file=paste0('count_system_boxplot.eps'),width=plot_dims[1],height=plot_dims[2])
 
 # Next plot is over Season
 f2 = ggplot(b_m,aes(x=Season,y=value,fill=Season)) +
@@ -53,6 +54,7 @@ f2 = ggplot(b_m,aes(x=Season,y=value,fill=Season)) +
   coord_flip()
 print(f2)
 ggsave(f2,file=paste0('count_season_boxplot.pdf'),width=plot_dims[1],height=plot_dims[2])
+ggsave(f2,file=paste0('count_season_boxplot.eps'),width=plot_dims[1],height=plot_dims[2])
 
 # Finally a scatter plot of response count vs duration
 df = with(birds,data.frame(Duration=rep(Duration,2),value=c(Abundance,Farmland_i),Variable=b_m$variable,System=b_m$System,Day=c(Day,Day)))
@@ -66,6 +68,7 @@ f3 = ggplot(df,aes(x=Duration,y=value,colour=System)) +
   facet_grid(Variable ~ ., scales = "free")
 print(f3)
 ggsave(f3,file=paste0('count_duration_scatter.pdf'),width=plot_dims[1],height=plot_dims[2])
+ggsave(f3,file=paste0('count_duration_scatter.eps'),width=plot_dims[1],height=plot_dims[2])
 
 # Have a quick look at day - almost totally unimportant
 f4 = ggplot(df,aes(x=Day,y=value,colour=System)) +
@@ -127,7 +130,8 @@ for(i in 1:2) {
 
   print(p)
   ggsave(p,file=paste0(colnames(birds)[i],'_posterior_predictive.pdf'),width=plot_dims[1],height=plot_dims[2])
-
+  ggsave(p,file=paste0(colnames(birds)[i],'_posterior_predictive.eps'),width=plot_dims[1],height=plot_dims[2])
+  
   # Correlation between true and predictive
   print(with(df,cor(Response,Median)))
 
@@ -182,6 +186,7 @@ p2 = ggplot(df,aes(x=response2,y=value,fill=response)) +
   geom_hline(aes(yintercept=1))
 print(p2)
 ggsave(p2,file='mean_effect.pdf',width=plot_dims[1],height=plot_dims[2])
+ggsave(p2,file='mean_effect.eps',width=plot_dims[1],height=plot_dims[2])
 
 ##########################
 
@@ -230,4 +235,5 @@ p3 = ggplot(df,aes(x=response2,y=value,fill=response)) +
   #geom_hline(aes(yintercept=0))
 print(p3)
 ggsave(p3,file='od_effect.pdf',width=plot_dims[1],height=plot_dims[2])
+ggsave(p3,file='od_effect.eps',width=plot_dims[1],height=plot_dims[2])
 
